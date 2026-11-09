@@ -11,7 +11,7 @@ export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
-    // pnpm db:seed prepara roles e o primeiro ADMIN; novas permissões entram no bootstrap.
+    // pnpm db:seed prepara as três roles e suas contas de teste.
     seed: 'ts-node prisma/seed.ts',
   },
   datasource: {

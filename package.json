@@ -8,6 +8,7 @@
   "scripts": {
     "build": "nest build",
     "deploy": "nest deploy",
+    "db:seed": "prisma db seed --config prisma7.config.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",

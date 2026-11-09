@@ -31,6 +31,27 @@
 $ pnpm install
 ```
 
+## Seed de roles e usuários de teste
+
+Com `DATABASE_URL` configurada no `.env` e as migrations aplicadas, execute:
+
+```bash
+pnpm db:seed
+```
+
+A seed cria as roles com suas descrições e uma conta ativa para cada perfil.
+As senhas são armazenadas como hash Argon2id.
+
+| Role        | Perfil        | E-mail                    | Senha inicial de teste |
+| ----------- | ------------- | ------------------------- | ---------------------- |
+| `ADMIN`     | Administrador | `admin@helpdesk.test`     | `Admin@123456`         |
+| `REQUESTER` | Solicitante   | `requester@helpdesk.test` | `Requester@123456`     |
+| `AGENT`     | Atendente     | `agent@helpdesk.test`     | `Agent@123456`         |
+
+Essas credenciais são destinadas ao ambiente de desenvolvimento/teste. A seed
+pode ser executada novamente sem duplicar roles, usuários ou vínculos. Ela
+atualiza as descrições das roles e preserva os dados e senhas de contas existentes.
+
 ## Compile and run the project
 
 ```bash
