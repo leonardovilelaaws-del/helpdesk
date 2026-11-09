@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { validateEnvironment } from '../config/environment';
 import { AuthModule } from '../auth/auth.module';
 import { AuthorizationModule } from '../authorization/authorization.module';
+import { TicketsModule } from '../tickets/tickets.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthorizationModule } from '../authorization/authorization.module';
     }),
     AuthModule,
     AuthorizationModule,
+    TicketsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

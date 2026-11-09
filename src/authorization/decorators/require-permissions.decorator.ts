@@ -13,6 +13,7 @@ export interface PermissionRequirement {
  * @RequirePermissions('credito:read', 'credito:update') exige ler E alterar.
  * O decorator apenas anota essa regra; PermissionsGuard a confere antes do controller.
  * A regra do método não apaga uma exigência que já esteja na classe.
+ * @RequireRole() no mesmo nível permite cumprir a role OU esta regra de permissões.
  */
 export const RequirePermissions = (...permissions: [string, ...string[]]) =>
   SetMetadata(PERMISSIONS_KEY, {
@@ -23,6 +24,7 @@ export const RequirePermissions = (...permissions: [string, ...string[]]) =>
 /**
  * A alternativa explícita para OU: basta ter uma das ações informadas.
  * Exemplo: uma consulta compartilhada pode aceitar compras:read OU credito:read.
+ * @RequireRole() no mesmo nível também permite entrar pela role informada.
  */
 export const RequireAnyPermission = (...permissions: [string, ...string[]]) =>
   SetMetadata(PERMISSIONS_KEY, {

@@ -11,14 +11,16 @@ import {
   PERMISSIONS_KEY,
   type PermissionRequirement,
 } from '../decorators/require-permissions.decorator';
+import { REQUIRE_ROLES_KEY } from '../decorators/require-role.decorator';
 
 /**
  * Uma role reúne ações, mas cada rota pode exigir uma ação específica.
  * Exemplo: credito:read permite consultar Crédito; não permite ler seu relatório.
+ * @RequireRole() permite declarar uma role como alternativa às permissões.
  */
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  // O Reflector recupera as permissões anotadas por @RequirePermissions() na rota.
+  // O Reflector lê as permissões e as roles alternativas da classe e do método.
   constructor(private readonly reflector: Reflector) {}
 
   /**
@@ -26,15 +28,24 @@ export class PermissionsGuard implements CanActivate {
    * A lista veio do banco agora: remover uma permissão afeta a próxima requisição.
    */
   canActivate(context: ExecutionContext): boolean {
-    // A regra do método se soma à regra da classe; ela não pode enfraquecer a proteção.
-    const requirements = this.reflector
-      .getAll<(PermissionRequirement | undefined)[]>(PERMISSIONS_KEY, [
-        context.getClass(),
-        context.getHandler(),
-      ])
-      .filter((rule): rule is PermissionRequirement => rule !== undefined);
+    // Mantemos cada nível separado: uma alternativa no método não dispensa a regra da classe.
+    const requirements = [context.getClass(), context.getHandler()]
+      .map((target) => ({
+        permissions: this.reflector.get<PermissionRequirement | undefined>(
+          PERMISSIONS_KEY,
+          target,
+        ),
+        roles: this.reflector.get<string[] | undefined>(
+          REQUIRE_ROLES_KEY,
+          target,
+        ),
+      }))
+      .filter(
+        ({ permissions, roles }) =>
+          permissions !== undefined || roles !== undefined,
+      );
 
-    // Sem decorator de permissão, este guard libera; isso não dispensa o login.
+    // Sem permissões nem roles alternativas, este guard libera; o login continua obrigatório.
     if (requirements.length === 0) return true;
 
     const { user } = context
@@ -45,18 +56,23 @@ export class PermissionsGuard implements CanActivate {
     // ADMIN pode executar qualquer ação, inclusive novas permissões criadas depois.
     if (user.roles.includes('ADMIN')) return true;
 
-    // O every externo exige que as regras da classe E do método sejam atendidas.
-    // Cada regra informa se exige todas as suas permissões ou apenas uma.
-    const allowed = requirements.every((rule) => {
+    // Classe E método precisam passar. Em cada nível, basta a role OU a regra de permissões.
+    const allowed = requirements.every(({ permissions, roles }) => {
+      const hasRole = roles?.some((role) => user.roles.includes(role));
+      if (hasRole) return true;
+      // Role sozinha não pode liberar quem não a possui.
+      if (!permissions) return false;
+
       // Comparamos o nome completo: credito:read e credito:relatorio:read são diferentes.
       const hasPermission = (permission: string) =>
         user.permissions.includes(permission);
       // all + every: ler E alterar. any + some: ler OU alterar.
-      return rule.mode === 'all'
-        ? rule.permissions.every(hasPermission)
-        : rule.permissions.some(hasPermission);
+      return permissions.mode === 'all'
+        ? permissions.permissions.every(hasPermission)
+        : permissions.permissions.some(hasPermission);
     });
-    if (!allowed) throw new ForbiddenException('Insufficient permissions');
+    if (!allowed)
+      throw new ForbiddenException('Insufficient permissions or roles');
     return true;
   }
 }

@@ -56,7 +56,9 @@ export const ModelName = {
   Permission: 'Permission',
   RolePermission: 'RolePermission',
   UserRole: 'UserRole',
-  RefreshSession: 'RefreshSession'
+  RefreshSession: 'RefreshSession',
+  Ticket: 'Ticket',
+  TicketHistory: 'TicketHistory'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -134,6 +136,31 @@ export const RefreshSessionScalarFieldEnum = {
 } as const
 
 export type RefreshSessionScalarFieldEnum = (typeof RefreshSessionScalarFieldEnum)[keyof typeof RefreshSessionScalarFieldEnum]
+
+
+export const TicketScalarFieldEnum = {
+  id: 'id',
+  subject: 'subject',
+  description: 'description',
+  status: 'status',
+  user_requester_id: 'user_requester_id',
+  user_agent_id: 'user_agent_id',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
+
+
+export const TicketHistoryScalarFieldEnum = {
+  id: 'id',
+  ticket_id: 'ticket_id',
+  user_agent_id: 'user_agent_id',
+  comment: 'comment',
+  createdAt: 'createdAt'
+} as const
+
+export type TicketHistoryScalarFieldEnum = (typeof TicketHistoryScalarFieldEnum)[keyof typeof TicketHistoryScalarFieldEnum]
 
 
 export const SortOrder = {

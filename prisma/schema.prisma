@@ -10,18 +10,21 @@ datasource db {
 }
 
 model User {
-  id              String           @id @default(uuid()) @db.Uuid
-  name            String           @db.VarChar(150)
-  email           String           @unique @db.VarChar(254)
-  password        String
+  id               String           @id @default(uuid()) @db.Uuid
+  name             String           @db.VarChar(150)
+  email            String           @unique @db.VarChar(254)
+  password         String
   // Desativar a conta bloqueia login e uso de tokens, sem precisar apagar seus dados.
-  isActive        Boolean          @default(true)
-  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+  isActive         Boolean          @default(true)
+  createdAt        DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime         @updatedAt @db.Timestamptz(3)
   // Uma pessoa pode ser de CREDITO e também de CREDITO_RELATORIOS; por isso é uma lista.
-  userRoles       UserRole[]
+  userRoles        UserRole[]
   // Mantém o histórico para reconhecer um refresh token antigo se ele for enviado novamente.
-  refreshSessions RefreshSession[]
+  refreshSessions  RefreshSession[]
+  requestedTickets Ticket[]         @relation("RequestedTickets")
+  assignedTickets  Ticket[]         @relation("AssignedTickets")
+  ticketHistories  TicketHistory[]  @relation("AgentTicketHistories")
 
   @@index([createdAt(sort: Desc), id(sort: Desc)])
   @@map("users")
@@ -90,4 +93,56 @@ model RefreshSession {
   @@index([familyId])
   @@index([expiresAt])
   @@map("refresh_sessions")
+}
+
+// tickets
+// - id
+// - subject
+// - description
+// - status
+// - created_at
+// - updated_at
+// ticket_histories
+// - id
+// - ticket_id
+// - agent_id
+// - comment
+// - created_at
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_FOR_CUSTOMER
+  ON_HOLD
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+model Ticket {
+  id          String       @id @default(uuid()) @db.Uuid
+  subject     String       @db.VarChar(255)
+  description String       @db.Text
+  status      TicketStatus @default(OPEN)
+
+  user_requester_id String  @db.Uuid
+  user_agent_id     String? @db.Uuid
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  user_requester User  @relation("RequestedTickets", fields: [user_requester_id], references: [id], onDelete: Restrict)
+  user_agent     User? @relation("AssignedTickets", fields: [user_agent_id], references: [id], onDelete: SetNull)
+
+  @@map("tickets")
+}
+
+model TicketHistory {
+  id            String   @id @default(uuid()) @db.Uuid
+  ticket_id     String   @db.Uuid
+  user_agent_id String?  @db.Uuid
+  comment       String   @db.Text
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
+  user_agent    User?    @relation("AgentTicketHistories", fields: [user_agent_id], references: [id], onDelete: SetNull)
+
+  @@map("ticket_histories")
 }

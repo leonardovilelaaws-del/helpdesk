@@ -69,3 +69,13 @@ export type UserRole = Prisma.UserRoleModel
  * 
  */
 export type RefreshSession = Prisma.RefreshSessionModel
+/**
+ * Model Ticket
+ * 
+ */
+export type Ticket = Prisma.TicketModel
+/**
+ * Model TicketHistory
+ * 
+ */
+export type TicketHistory = Prisma.TicketHistoryModel
