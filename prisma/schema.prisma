@@ -1,0 +1,93 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "cjs"
+  importFileExtension = ""
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String           @id @default(uuid()) @db.Uuid
+  name            String           @db.VarChar(150)
+  email           String           @unique @db.VarChar(254)
+  password        String
+  // Desativar a conta bloqueia login e uso de tokens, sem precisar apagar seus dados.
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+  // Uma pessoa pode ser de CREDITO e também de CREDITO_RELATORIOS; por isso é uma lista.
+  userRoles       UserRole[]
+  // Mantém o histórico para reconhecer um refresh token antigo se ele for enviado novamente.
+  refreshSessions RefreshSession[]
+
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@map("users")
+}
+
+model Role {
+  id              String           @id @default(uuid()) @db.Uuid
+  name            String           @unique @db.VarChar(64)
+  description     String?          @db.VarChar(250)
+  rolePermissions RolePermission[]
+  userRoles       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id              String           @id @default(uuid()) @db.Uuid
+  name            String           @unique @db.VarChar(100)
+  description     String?          @db.VarChar(250)
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String     @db.Uuid
+  permissionId String     @db.Uuid
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId String @db.Uuid
+  roleId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+model RefreshSession {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  // No refresh, calculamos o hash do cookie recebido e procuramos este valor.
+  // Quem obtiver somente o banco não recebe o token original que poderia enviar à API.
+  tokenHash  String    @unique @db.VarChar(64)
+  // id identifica um token; familyId identifica toda a sequência iniciada no mesmo login.
+  // Se um token antigo for reutilizado, podemos encerrar também os tokens que o substituíram.
+  familyId   String    @db.Uuid
+  // A renovação mantém esta data: o usuário não fica conectado para sempre só fazendo refresh.
+  expiresAt  DateTime  @db.Timestamptz(3)
+  // Preenchido no logout ou bloqueio: o guard recusa a sessão mesmo se o JWT ainda não expirou.
+  revokedAt  DateTime? @db.Timestamptz(3)
+  // Um refresh só pode ser usado uma vez. Se esta data já existir, um novo uso é suspeito.
+  consumedAt DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@map("refresh_sessions")
+}
