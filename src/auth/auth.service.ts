@@ -409,8 +409,8 @@ export class AuthService {
     sessionId: string,
   ): Promise<AuthenticatedUser> {
     const roles = user.userRoles.map(({ role }) => role.name).sort();
-    // Para ADMIN, mostramos todo o catálogo em /auth/me. Os guards também têm liberação
-    // própria para ADMIN, então não dependem de cadastrar cada vínculo manualmente.
+    // ADMIN recebe todo o catálogo de permissões; isso não substitui uma role
+    // exigida por @Roles() ou por @RequireRole() sem alternativa de permissões.
     const permissions = roles.includes('ADMIN')
       ? (await this.prisma.permission.findMany({ select: { name: true } })).map(
           ({ name }) => name,

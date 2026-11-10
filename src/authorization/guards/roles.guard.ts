@@ -40,9 +40,7 @@ export class RolesGuard implements CanActivate {
       .getRequest<{ user?: AuthenticatedUser }>();
     // 401 indica login ausente ou inválido; 403 indica login válido, mas sem acesso à ação.
     if (!user) throw new UnauthorizedException();
-    // ADMIN passa por qualquer regra de role; não precisa acumular todos os perfis.
-    if (user.roles.includes('ADMIN')) return true;
-
+    // Nenhuma role, inclusive ADMIN, substitui automaticamente outra role exigida.
     // some: @Roles('COMPRAS', 'CREDITO') aceita qualquer um desses perfis.
     // every: se classe e método têm regras, o usuário precisa passar nas duas.
     const allowed = requirements.every((roles) =>

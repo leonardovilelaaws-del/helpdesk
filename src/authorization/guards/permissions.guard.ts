@@ -53,10 +53,8 @@ export class PermissionsGuard implements CanActivate {
       .getRequest<{ user?: AuthenticatedUser }>();
     // Não estar autenticado é diferente de estar autenticado sem a permissão necessária.
     if (!user) throw new UnauthorizedException();
-    // ADMIN pode executar qualquer ação, inclusive novas permissões criadas depois.
-    if (user.roles.includes('ADMIN')) return true;
-
-    // Classe E método precisam passar. Em cada nível, basta a role OU a regra de permissões.
+    // Inclusive ADMIN precisa cumprir as regras declaradas na classe E no método.
+    // Em cada nível, basta a role OU a regra de permissões.
     const allowed = requirements.every(({ permissions, roles }) => {
       const hasRole = roles?.some((role) => user.roles.includes(role));
       if (hasRole) return true;

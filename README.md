@@ -67,16 +67,43 @@ $ pnpm run start:prod
 
 ## Run tests
 
+No WebStorm, use **Run** no arquivo ou no teste. A configuração
+`jest.config.cjs` encontra unitários e e2e, sem opções extras do Node.
+
 ```bash
-# unit tests
+# todos os testes
 $ pnpm run test
 
-# e2e tests
+# somente unitários (não precisam de banco)
+$ pnpm run test:unit
+
+# e2e com login, JWT, Prisma e PostgreSQL reais
 $ pnpm run test:e2e
 
-# test coverage
+# cobertura
 $ pnpm run test:cov
 ```
+
+O banco `helpdesk_test` usa um usuário próprio, também chamado `helpdesk_test`.
+As credenciais e a chave JWT ficam em `.env.test`, ignorado pelo Git. O setup
+sobrescreve variáveis herdadas da IDE e recusa um banco diferente do banco local
+de teste. A seed prepara ADMIN, AGENT e REQUESTER antes dos e2e. Os testes fazem
+login nessas contas e apagam apenas os tickets e sessões criados pela própria execução.
+
+O exemplo de `POST /tickets` está em `test/tickets.e2e-spec.ts`: faz login com
+`agent@helpdesk.test` / `Agent@123456`, envia o JSON e confere a gravação no banco.
+
+O banco já está preparado nesta máquina. Para preparar novamente ou configurar
+outra máquina, com o PostgreSQL local e o `.env` de desenvolvimento disponíveis:
+
+```bash
+$ pnpm run db:test:setup
+```
+
+Esse comando cria o banco e seu usuário se necessário, aplica migrations e
+executa a seed. Antes de cada execução e2e, o Jest aplica migrations pendentes
+e executa a seed automaticamente. Se o container `postgres-helpdesk` estiver parado, o setup
+tenta iniciá-lo; o Docker Desktop precisa estar aberto. Não há reset de banco.
 
 ## Deployment
 

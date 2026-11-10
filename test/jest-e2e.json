@@ -1,10 +1,21 @@
 {
+  "displayName": "e2e",
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "..",
   "testEnvironment": "node",
-  "testRegex": ".e2e-spec.ts$",
-  "setupFiles": ["<rootDir>/setup-env.ts"],
+  "testRegex": ".*\\.e2e-spec\\.ts$",
+  "globalSetup": "<rootDir>/test/global-setup.cjs",
+  "setupFiles": ["<rootDir>/test/setup-env.ts"],
+  "testTimeout": 30000,
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  }
+    "^.+\\.ts$": ["ts-jest", { "tsconfig": "<rootDir>/tsconfig.spec.json" }],
+    "^.+\\.m?js$": [
+      "@swc/jest",
+      {
+        "jsc": { "target": "es2022" },
+        "module": { "type": "commonjs" }
+      }
+    ]
+  },
+  "transformIgnorePatterns": ["node_modules/(?!(?:\\.pnpm/|@nestjs/))"]
 }
