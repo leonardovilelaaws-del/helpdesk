@@ -1,4 +1,4 @@
-import { Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket-dto';
 import { ApiCookieAuth } from '@nestjs/swagger';
@@ -15,7 +15,7 @@ export class TicketsController {
   @RequireRole('ADMIN')
   async createTicket(
     @CurrentUser() user: AuthenticatedUser,
-    createTicketDto: CreateTicketDto,
+    @Body() createTicketDto: CreateTicketDto,
   ) {
     return await this.ticketsService.createTicket(user.id, createTicketDto);
   }
